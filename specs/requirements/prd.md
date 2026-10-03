@@ -23,11 +23,21 @@ product user, just a technical consumer of the API.
 ## User Stories
 
 1. As an API Consumer, I want to call `GET /hello?name=X` and receive a JSON
- greeting addressed to `X`, so that I can verify the service responds
- correctly for a given name.
+greeting addressed to `X`, so that I can verify the service responds
+correctly for a given name.
 2. As an API Consumer, I want `GET /hello` to still return a valid JSON
- greeting when I omit the `name` parameter, so that the endpoint never
- fails just because I left it out.
+greeting when I omit the `name` parameter, so that the endpoint never
+fails just because I left it out.
+3. As an API Consumer, I want `GET /hello?name=` (an explicitly empty value)
+to return the same default greeting as omitting `name` entirely, so that
+an empty value is never treated as an error.
+4. As an API Consumer, I want `GET /hello` to accept a very long `name`
+value and return a greeting addressed to it in full, so that the endpoint
+never fails just because the name is unusually long.
+5. As an API Consumer, I want `GET /hello` to accept a `name` containing
+non-ASCII/unicode characters (e.g. accented letters, CJK script, emoji) and
+return a greeting addressed to it correctly, so that the endpoint works for
+names outside the ASCII range.
 
 ## Product Decisions
 
@@ -36,6 +46,12 @@ product user, just a technical consumer of the API.
 - The `/hello` endpoint is open — no sign-in, no API key — reachable by any
 client. *assumed*
 - The response is JSON, carrying at minimum the greeting message.
+- An explicitly empty `name` value (`?name=`) is treated the same as an
+omitted `name` — both fall back to the default greeting. *assumed*
+- A very long `name` value is accepted and echoed in full; the service
+enforces no maximum length. *assumed*
+- A `name` containing unicode characters is passed through as-is (valid
+UTF-8), with no normalization, transliteration, or rejection. *assumed*
 
 ## Out of Scope
 

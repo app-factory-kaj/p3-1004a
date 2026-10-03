@@ -9,6 +9,6 @@
   "exposure": "internet",
   "dependencies": [],
   "description": "Single-endpoint reference HTTP service. GET /hello?name=X returns a JSON greeting addressed to X, or to \"World\" when name is omitted or empty. Stateless: holds no data store and no other dependency. Does not implement sign-in, rate limiting, or any endpoint beyond /hello and a health check.",
-  "stories": [1, 2],
+  "stories": [1, 2, 3, 4, 5],
   "skillsPinned": ["openapi-conventions", "go"]
 }
