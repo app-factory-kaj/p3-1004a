@@ -38,6 +38,15 @@ never fails just because the name is unusually long.
 non-ASCII/unicode characters (e.g. accented letters, CJK script, emoji) and
 return a greeting addressed to it correctly, so that the endpoint works for
 names outside the ASCII range.
+6. As an API Consumer, I want every response from the service to carry a
+`Content-Type: application/json` header, so that I can parse it
+programmatically without guessing its format.
+7. As an API Consumer, I want to call `GET /health` and get a simple status
+response, so that I can verify the service is up before integrating against
+it.
+8. As an API Consumer, I want `GET /hello` to ignore any query parameters
+other than `name`, so that an unrelated or misspelled parameter never
+changes or breaks the response.
 
 ## Product Decisions
 
@@ -52,6 +61,26 @@ omitted `name` — both fall back to the default greeting. *assumed*
 enforces no maximum length. *assumed*
 - A `name` containing unicode characters is passed through as-is (valid
 UTF-8), with no normalization, transliteration, or rejection. *assumed*
+- Every response, success or error, carries `Content-Type: application/json`
+and a stable, documented shape. *assumed*
+- Error responses use the single shape `{"error": "message"}`, per the
+`app-factory-kaj/e2e-reference` conventions. *assumed*
+- The service is stateless and holds no in-memory session data, so any
+number of instances may run behind a load balancer with no coordination
+between them. *assumed*
+- The service listens on a port read from the `PORT` environment variable,
+defaulting to `8080` when unset, per the `e2e-reference` conventions.
+*assumed*
+- `GET /health` responds quickly (no downstream calls, no I/O) so it is
+cheap to poll for liveness/readiness checks. *assumed*
+- Unrecognized query parameters on `GET /hello` are silently ignored rather
+than rejected. *assumed*
+- The service is built on the Go standard library (`net/http`) with no web
+framework dependency, per the `e2e-reference` conventions. *assumed*
+- No request or response data is logged or persisted anywhere, since names
+may be arbitrary user input and the service keeps no records. *assumed*
+- A single request is handled independently of any other; there is no
+rate limit, quota, or per-caller state to maintain. *assumed*
 
 ## Out of Scope
 
@@ -62,7 +91,9 @@ UTF-8), with no normalization, transliteration, or rejection. *assumed*
 
 ## Open Questions
 
-None at this time.
+1. Is there a maximum request size or `name` length the hosting gateway
+enforces upstream, independent of what this service itself accepts?
+Deferred — the user will decide later if it becomes relevant.
 
 ## Further Notes
 

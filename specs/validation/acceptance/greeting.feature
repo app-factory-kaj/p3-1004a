@@ -49,3 +49,27 @@ Feature: Greeting
       Given the greeter service is running
       When an API Consumer calls GET /hello with name "Ada🚀"
       Then the response is a JSON greeting addressed to "Ada🚀"
+
+  @story-6
+  Rule: Every response carries a JSON content type
+
+    Scenario: The greeting response is JSON
+      Given the greeter service is running
+      When an API Consumer calls GET /hello with name "Ada"
+      Then the response has a "Content-Type" header of "application/json"
+
+  @story-7
+  Rule: The service exposes a health check
+
+    Scenario: Checking the service is up
+      Given the greeter service is running
+      When an API Consumer calls GET /health
+      Then the response reports the service status as healthy
+
+  @story-8
+  Rule: Unrecognized query parameters are ignored
+
+    Scenario: An unrelated query parameter does not change the greeting
+      Given the greeter service is running
+      When an API Consumer calls GET /hello with name "Ada" and an extra parameter "foo" set to "bar"
+      Then the response is a JSON greeting addressed to "Ada"
