@@ -1,0 +1,229 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-04T00:08:29Z",
+  "commit": "cff165b508ac34faf08db7a0c456ca812deaaeb9",
+  "baseUrl": "http://development-default.openchoreoapis.localhost:19080/p3-1004a-greeter-http",
+  "isolation": "the greeter service is stateless (no persisted data); each scenario issues its own independent GET request and asserts only on that request's own response, so no cross-scenario state exists to isolate",
+  "scenarios": [
+    {
+      "feature": "Greeting",
+      "featureFile": "specs/validation/acceptance/greeting.feature",
+      "line": 6,
+      "rule": "Calling /hello with a name returns a greeting addressed to that name",
+      "scenario": "Greeting a named caller",
+      "tags": ["@story-1"],
+      "outcome": "passed",
+      "steps": [
+        { "text": "the greeter service is running", "keyword": "Given",
+          "command": "curl -s -o /dev/null -w '%{http_code}' \"$BASE/health\"",
+          "exit": 0, "observed": "200" },
+        { "text": "an API Consumer calls GET /hello with name \"Ada\"", "keyword": "When",
+          "command": "curl -s -i -G \"$BASE/hello\" --data-urlencode \"name=Ada\"" },
+        { "text": "the response is a JSON greeting addressed to \"Ada\"", "keyword": "Then",
+          "command": "curl -s -G \"$BASE/hello\" --data-urlencode \"name=Ada\" | python3 -c \"import json,sys; d=json.load(sys.stdin); assert d=={'name':'Ada','message':'Hello, Ada!'}\"",
+          "exit": 0, "observed": "{\"name\":\"Ada\",\"message\":\"Hello, Ada!\"}" }
+      ],
+      "evidence": {
+        "network": [{ "method": "GET", "url": "/hello?name=Ada", "status": 200 }]
+      }
+    },
+    {
+      "feature": "Greeting",
+      "featureFile": "specs/validation/acceptance/greeting.feature",
+      "line": 14,
+      "rule": "Calling /hello without a name still returns a valid greeting",
+      "scenario": "Greeting with no name supplied",
+      "tags": ["@story-2"],
+      "outcome": "passed",
+      "steps": [
+        { "text": "the greeter service is running", "keyword": "Given",
+          "command": "curl -s -o /dev/null -w '%{http_code}' \"$BASE/health\"",
+          "exit": 0, "observed": "200" },
+        { "text": "an API Consumer calls GET /hello with no name parameter", "keyword": "When",
+          "command": "curl -s -i \"$BASE/hello\"" },
+        { "text": "the response is a JSON greeting addressed to \"World\"", "keyword": "Then",
+          "command": "curl -s \"$BASE/hello\" | python3 -c \"import json,sys; d=json.load(sys.stdin); assert d=={'name':'World','message':'Hello, World!'}\"",
+          "exit": 0, "observed": "{\"name\":\"World\",\"message\":\"Hello, World!\"}" }
+      ],
+      "evidence": {
+        "network": [{ "method": "GET", "url": "/hello", "status": 200 }]
+      }
+    },
+    {
+      "feature": "Greeting",
+      "featureFile": "specs/validation/acceptance/greeting.feature",
+      "line": 22,
+      "rule": "An explicitly empty name is treated the same as an omitted name",
+      "scenario": "Greeting with an explicitly empty name",
+      "tags": ["@story-3"],
+      "outcome": "passed",
+      "steps": [
+        { "text": "the greeter service is running", "keyword": "Given",
+          "command": "curl -s -o /dev/null -w '%{http_code}' \"$BASE/health\"",
+          "exit": 0, "observed": "200" },
+        { "text": "an API Consumer calls GET /hello with name \"\"", "keyword": "When",
+          "command": "curl -s -i -G \"$BASE/hello\" --data-urlencode \"name=\"" },
+        { "text": "the response is a JSON greeting addressed to \"World\"", "keyword": "Then",
+          "command": "curl -s -G \"$BASE/hello\" --data-urlencode \"name=\" | python3 -c \"import json,sys; d=json.load(sys.stdin); assert d=={'name':'World','message':'Hello, World!'}\"",
+          "exit": 0, "observed": "{\"name\":\"World\",\"message\":\"Hello, World!\"}" }
+      ],
+      "evidence": {
+        "network": [{ "method": "GET", "url": "/hello?name=", "status": 200 }]
+      }
+    },
+    {
+      "feature": "Greeting",
+      "featureFile": "specs/validation/acceptance/greeting.feature",
+      "line": 30,
+      "rule": "A very long name is accepted and echoed in full",
+      "scenario": "Greeting a caller with a very long name",
+      "tags": ["@story-4"],
+      "outcome": "passed",
+      "steps": [
+        { "text": "the greeter service is running", "keyword": "Given",
+          "command": "curl -s -o /dev/null -w '%{http_code}' \"$BASE/health\"",
+          "exit": 0, "observed": "200" },
+        { "text": "an API Consumer calls GET /hello with a name that is 2000 characters long, all the letter \"a\"", "keyword": "When",
+          "command": "NAME=$(python3 -c \"print('a'*2000)\"); curl -s -G \"$BASE/hello\" --data-urlencode \"name=$NAME\" -o /tmp/story4_resp.txt" },
+        { "text": "the response is a JSON greeting addressed to that same 2000-character name", "keyword": "Then",
+          "command": "python3 -c \"import json; d=json.load(open('/tmp/story4_resp.txt')); assert d['name']=='a'*2000; assert d['message']=='Hello, '+'a'*2000+'!'\"",
+          "exit": 0, "observed": "name field length 2000, all 'a', message == 'Hello, ' + 2000 a's + '!'" }
+      ],
+      "evidence": {
+        "network": [{ "method": "GET", "url": "/hello?name=<2000 a's>", "status": 200 }]
+      }
+    },
+    {
+      "feature": "Greeting",
+      "featureFile": "specs/validation/acceptance/greeting.feature",
+      "line": 38,
+      "rule": "A unicode name is accepted and echoed correctly",
+      "scenario": "Greeting a caller with an accented name",
+      "tags": ["@story-5"],
+      "outcome": "passed",
+      "steps": [
+        { "text": "the greeter service is running", "keyword": "Given",
+          "command": "curl -s -o /dev/null -w '%{http_code}' \"$BASE/health\"",
+          "exit": 0, "observed": "200" },
+        { "text": "an API Consumer calls GET /hello with name \"José\"", "keyword": "When",
+          "command": "curl -s -i -G \"$BASE/hello\" --data-urlencode \"name=José\"" },
+        { "text": "the response is a JSON greeting addressed to \"José\"", "keyword": "Then",
+          "command": "curl -s -G \"$BASE/hello\" --data-urlencode \"name=José\" | python3 -c \"import json,sys; d=json.load(sys.stdin); assert d=={'name':'José','message':'Hello, José!'}\"",
+          "exit": 0, "observed": "{\"name\":\"José\",\"message\":\"Hello, José!\"}" }
+      ],
+      "evidence": {
+        "network": [{ "method": "GET", "url": "/hello?name=Jos%C3%A9", "status": 200 }]
+      }
+    },
+    {
+      "feature": "Greeting",
+      "featureFile": "specs/validation/acceptance/greeting.feature",
+      "line": 43,
+      "rule": "A unicode name is accepted and echoed correctly",
+      "scenario": "Greeting a caller with a CJK name",
+      "tags": ["@story-5"],
+      "outcome": "passed",
+      "steps": [
+        { "text": "the greeter service is running", "keyword": "Given",
+          "command": "curl -s -o /dev/null -w '%{http_code}' \"$BASE/health\"",
+          "exit": 0, "observed": "200" },
+        { "text": "an API Consumer calls GET /hello with name \"田中\"", "keyword": "When",
+          "command": "curl -s -i -G \"$BASE/hello\" --data-urlencode \"name=田中\"" },
+        { "text": "the response is a JSON greeting addressed to \"田中\"", "keyword": "Then",
+          "command": "curl -s -G \"$BASE/hello\" --data-urlencode \"name=田中\" | python3 -c \"import json,sys; d=json.load(sys.stdin); assert d=={'name':'田中','message':'Hello, 田中!'}\"",
+          "exit": 0, "observed": "{\"name\":\"田中\",\"message\":\"Hello, 田中!\"}" }
+      ],
+      "evidence": {
+        "network": [{ "method": "GET", "url": "/hello?name=%E7%94%B0%E4%B8%AD", "status": 200 }]
+      }
+    },
+    {
+      "feature": "Greeting",
+      "featureFile": "specs/validation/acceptance/greeting.feature",
+      "line": 48,
+      "rule": "A unicode name is accepted and echoed correctly",
+      "scenario": "Greeting a caller with an emoji in their name",
+      "tags": ["@story-5"],
+      "outcome": "passed",
+      "steps": [
+        { "text": "the greeter service is running", "keyword": "Given",
+          "command": "curl -s -o /dev/null -w '%{http_code}' \"$BASE/health\"",
+          "exit": 0, "observed": "200" },
+        { "text": "an API Consumer calls GET /hello with name \"Ada🚀\"", "keyword": "When",
+          "command": "curl -s -i -G \"$BASE/hello\" --data-urlencode \"name=Ada🚀\"" },
+        { "text": "the response is a JSON greeting addressed to \"Ada🚀\"", "keyword": "Then",
+          "command": "curl -s -G \"$BASE/hello\" --data-urlencode \"name=Ada🚀\" | python3 -c \"import json,sys; d=json.load(sys.stdin); assert d=={'name':'Ada🚀','message':'Hello, Ada🚀!'}\"",
+          "exit": 0, "observed": "{\"name\":\"Ada🚀\",\"message\":\"Hello, Ada🚀!\"}" }
+      ],
+      "evidence": {
+        "network": [{ "method": "GET", "url": "/hello?name=Ada%F0%9F%9A%80", "status": 200 }]
+      }
+    },
+    {
+      "feature": "Greeting",
+      "featureFile": "specs/validation/acceptance/greeting.feature",
+      "line": 56,
+      "rule": "Every response carries a JSON content type",
+      "scenario": "The greeting response is JSON",
+      "tags": ["@story-6"],
+      "outcome": "passed",
+      "steps": [
+        { "text": "the greeter service is running", "keyword": "Given",
+          "command": "curl -s -o /dev/null -w '%{http_code}' \"$BASE/health\"",
+          "exit": 0, "observed": "200" },
+        { "text": "an API Consumer calls GET /hello with name \"Ada\"", "keyword": "When",
+          "command": "curl -s -i -G \"$BASE/hello\" --data-urlencode \"name=Ada\"" },
+        { "text": "the response has a \"Content-Type\" header of \"application/json\"", "keyword": "Then",
+          "command": "curl -s -D - -o /dev/null -G \"$BASE/hello\" --data-urlencode \"name=Ada\" | grep -i '^content-type:'",
+          "exit": 0, "observed": "content-type: application/json" }
+      ],
+      "evidence": {
+        "network": [{ "method": "GET", "url": "/hello?name=Ada", "status": 200 }]
+      }
+    },
+    {
+      "feature": "Greeting",
+      "featureFile": "specs/validation/acceptance/greeting.feature",
+      "line": 64,
+      "rule": "The service exposes a health check",
+      "scenario": "Checking the service is up",
+      "tags": ["@story-7"],
+      "outcome": "passed",
+      "steps": [
+        { "text": "the greeter service is running", "keyword": "Given",
+          "command": "curl -s -o /dev/null -w '%{http_code}' \"$BASE/health\"",
+          "exit": 0, "observed": "200" },
+        { "text": "an API Consumer calls GET /health", "keyword": "When",
+          "command": "curl -s -i \"$BASE/health\"" },
+        { "text": "the response reports the service status as healthy", "keyword": "Then",
+          "command": "curl -s \"$BASE/health\" | python3 -c \"import json,sys; d=json.load(sys.stdin); assert d['status']=='healthy'\"",
+          "exit": 0, "observed": "{\"status\":\"healthy\"}" }
+      ],
+      "evidence": {
+        "network": [{ "method": "GET", "url": "/health", "status": 200 }]
+      }
+    },
+    {
+      "feature": "Greeting",
+      "featureFile": "specs/validation/acceptance/greeting.feature",
+      "line": 72,
+      "rule": "Unrecognized query parameters are ignored",
+      "scenario": "An unrelated query parameter does not change the greeting",
+      "tags": ["@story-8"],
+      "outcome": "passed",
+      "steps": [
+        { "text": "the greeter service is running", "keyword": "Given",
+          "command": "curl -s -o /dev/null -w '%{http_code}' \"$BASE/health\"",
+          "exit": 0, "observed": "200" },
+        { "text": "an API Consumer calls GET /hello with name \"Ada\" and an extra parameter \"foo\" set to \"bar\"", "keyword": "When",
+          "command": "curl -s -i -G \"$BASE/hello\" --data-urlencode \"name=Ada\" --data-urlencode \"foo=bar\"" },
+        { "text": "the response is a JSON greeting addressed to \"Ada\"", "keyword": "Then",
+          "command": "curl -s -G \"$BASE/hello\" --data-urlencode \"name=Ada\" --data-urlencode \"foo=bar\" | python3 -c \"import json,sys; d=json.load(sys.stdin); assert d=={'name':'Ada','message':'Hello, Ada!'}\"",
+          "exit": 0, "observed": "{\"name\":\"Ada\",\"message\":\"Hello, Ada!\"}" }
+      ],
+      "evidence": {
+        "network": [{ "method": "GET", "url": "/hello?name=Ada&foo=bar", "status": 200 }]
+      }
+    }
+  ]
+}
